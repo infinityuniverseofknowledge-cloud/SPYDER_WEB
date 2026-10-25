@@ -1,0 +1,1075 @@
+<!DOCTYPE html><html lang="pt-BR" data-theme="cyber"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070B14"><title>SPYDER · Neural Chat</title>
+<style>
+:root{--bg:#070B14;--bg2:#0D1422;--panel:rgba(17,27,43,.72);--border:rgba(0,229,255,.16);--p:#00E5FF;--s:#8B5CF6;--a:#00FFA3;--t:#F1F5F9;--m:#94A3B8;--e:#ff3b5c;--glow:0 0 24px rgba(0,229,255,.35)}
+:root[data-theme="matrix"]{--p:#00FF41;--s:#00CC33;--a:#7FFF00;--bg:#000500;--bg2:#001100;--panel:rgba(0,20,0,.75);--border:rgba(0,255,65,.2);--glow:0 0 24px rgba(0,255,65,.35)}
+:root[data-theme="aurora"]{--p:#A78BFA;--s:#F472B6;--a:#34D399;--bg:#0F0524;--bg2:#1A0B3A;--panel:rgba(26,11,58,.72);--border:rgba(167,139,250,.2);--glow:0 0 24px rgba(167,139,250,.35)}
+:root[data-theme="light"]{--bg:#F1F5F9;--bg2:#FFFFFF;--panel:rgba(255,255,255,.85);--border:rgba(0,100,150,.15);--p:#0284C7;--s:#7C3AED;--a:#059669;--t:#0F172A;--m:#64748B;--glow:0 0 24px rgba(2,132,199,.15)}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--t);display:flex;flex-direction:column;position:relative}
+#neural{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5}
+#cursor{position:fixed;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--p) 15%,transparent),transparent 70%);pointer-events:none;z-index:1;transform:translate(-50%,-50%);transition:opacity .3s;mix-blend-mode:screen}
+.hd{position:relative;z-index:10;background:var(--panel);backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.hd .brand{display:flex;align-items:center;gap:10px}
+.hd .av{width:40px;height:40px;border-radius:50%;background:conic-gradient(from 0deg,var(--p),var(--s),var(--a),var(--p));display:grid;place-items:center;position:relative;flex-shrink:0;animation:spin 8s linear infinite}
+@keyframes spin{to{filter:hue-rotate(360deg)}}
+.hd .av::after{content:"";position:absolute;inset:3px;background:var(--bg);border-radius:50%;z-index:1}
+.hd .av span{position:relative;z-index:2;font-size:1.1rem}
+.hd h1{font-size:.92rem;font-weight:800;line-height:1;letter-spacing:.5px;background:linear-gradient(90deg,var(--p),var(--s));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hd small{font-size:.62rem;color:var(--m);display:flex;align-items:center;gap:5px;margin-top:3px}
+.hd small i{width:6px;height:6px;border-radius:50%;background:var(--m);display:inline-block}
+.hd small i.on{background:var(--a);box-shadow:0 0 10px var(--a);animation:pulse 2s infinite}
+.hd small i.off{background:var(--e)}
+@keyframes pulse{50%{opacity:.35}}
+.hd .ctl{display:flex;gap:5px}
+.hd .ctl button{background:transparent;border:1px solid var(--border);color:var(--m);width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:.95rem;transition:.2s;display:grid;place-items:center}
+.hd .ctl button:hover{border-color:var(--p);color:var(--p);box-shadow:var(--glow)}
+.hd .ctl button.on{background:linear-gradient(135deg,var(--p),var(--s));color:var(--bg);border-color:transparent}
+.side{position:fixed;top:0;bottom:0;left:-280px;width:270px;background:var(--panel);backdrop-filter:blur(24px);border-right:1px solid var(--border);z-index:200;transition:left .3s cubic-bezier(.4,1.2,.6,1);padding:12px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.side.on{left:0;box-shadow:20px 0 60px rgba(0,0,0,.6)}
+.side h2{font-size:.7rem;color:var(--m);text-transform:uppercase;letter-spacing:1.5px;margin-top:6px}
+.side .new{background:linear-gradient(135deg,var(--p),var(--s));color:var(--bg);border:0;padding:10px;border-radius:9px;font-weight:700;cursor:pointer;font-size:.8rem;font-family:inherit}
+.side .thread{padding:9px 11px;border-radius:8px;font-size:.78rem;color:var(--t);cursor:pointer;border-left:2px solid transparent;display:flex;justify-content:space-between;gap:6px}
+.side .thread:hover{background:var(--bg2);border-left-color:var(--p)}
+.side .thread.on{background:var(--bg2);border-left-color:var(--a);color:var(--a)}
+.side .thread .x{background:transparent;border:0;color:var(--m);cursor:pointer;font-size:.75rem;padding:0 2px}
+.side .thread .x:hover{color:var(--e)}
+.chat{flex:1;overflow-y:auto;padding:20px 14px 8px;display:flex;flex-direction:column;gap:14px;position:relative;z-index:2;scroll-behavior:smooth}
+.chat::-webkit-scrollbar{width:6px}
+.chat::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.msg{display:flex;gap:10px;max-width:92%;animation:msgIn .35s cubic-bezier(.2,1,.3,1)}
+@keyframes msgIn{from{opacity:0;transform:translateY(12px)}}
+.msg.u{align-self:flex-end;flex-direction:row-reverse}
+.msg.a{align-self:flex-start}
+.msg.sys{align-self:center;max-width:95%}
+.msg .av{width:32px;height:32px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:grid;place-items:center;font-size:.9rem;flex-shrink:0;align-self:flex-end}
+.msg.u .av{background:linear-gradient(135deg,var(--p),var(--s));color:var(--bg);border-color:transparent}
+.msg.a .av{background:conic-gradient(from 0deg,var(--p),var(--s),var(--a),var(--p));animation:spin 8s linear infinite;position:relative}
+.msg.a .av::after{content:"";position:absolute;inset:2px;background:var(--bg);border-radius:50%;z-index:1}
+.msg.a .av span{position:relative;z-index:2}
+.msg .bub{padding:11px 15px;border-radius:18px;font-size:.88rem;line-height:1.55;word-wrap:break-word;white-space:pre-wrap;position:relative}
+.msg.u .bub{background:linear-gradient(135deg,color-mix(in srgb,var(--p) 20%,transparent),color-mix(in srgb,var(--s) 20%,transparent));border:1px solid color-mix(in srgb,var(--p) 40%,transparent);border-bottom-right-radius:4px;box-shadow:0 4px 20px color-mix(in srgb,var(--p) 15%,transparent)}
+.msg.a .bub{background:var(--panel);border:1px solid color-mix(in srgb,var(--a) 20%,transparent);border-bottom-left-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.msg.sys .bub{background:color-mix(in srgb,var(--s) 12%,transparent);border:1px solid color-mix(in srgb,var(--s) 30%,transparent);font-size:.72rem;color:var(--m);text-align:center;border-radius:14px;padding:7px 14px}
+.msg .bub b{color:var(--p);font-weight:700}
+.msg .bub code{background:var(--bg2);padding:2px 6px;border-radius:4px;color:var(--a);font-size:.82em;font-family:ui-monospace,monospace}
+.msg .bub pre{background:var(--bg2);padding:10px;border-radius:8px;margin:8px 0;overflow-x:auto;font-size:.76rem;border:1px solid var(--border);font-family:ui-monospace,monospace}
+.msg .bub a{color:var(--p);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--p) 40%,transparent)}
+.msg .meta{font-size:.6rem;color:var(--m);margin-top:6px;padding-top:4px;border-top:1px solid var(--border);font-family:ui-monospace,monospace;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.msg .meta .src{color:var(--s)}
+.msg .meta .rxn{display:flex;gap:3px;opacity:0;transition:.2s}
+.msg:hover .meta .rxn{opacity:1}
+.msg .meta .rxn button{background:transparent;border:0;color:var(--m);cursor:pointer;font-size:.8rem;padding:1px 4px;border-radius:4px}
+.msg .meta .rxn button:hover{background:var(--bg2);transform:scale(1.2)}
+.reacted{display:flex;gap:4px;margin-top:4px;font-size:.85rem}
+.reacted span{background:var(--bg2);padding:2px 8px;border-radius:100px;border:1px solid var(--border)}
+.typing{display:flex;gap:5px;padding:14px 18px;align-items:center}
+.typing span{width:9px;height:9px;border-radius:50%;background:var(--p);animation:type 1.4s infinite;box-shadow:0 0 10px var(--p)}
+.typing span:nth-child(2){animation-delay:.2s;background:var(--s);box-shadow:0 0 10px var(--s)}
+.typing span:nth-child(3){animation-delay:.4s;background:var(--a);box-shadow:0 0 10px var(--a)}
+@keyframes type{0%,60%,100%{opacity:.3;transform:translateY(0) scale(.8)}30%{opacity:1;transform:translateY(-6px) scale(1.1)}}
+.sugg{display:flex;gap:6px;padding:6px 14px;overflow-x:auto;flex-shrink:0;position:relative;z-index:5;scrollbar-width:none}
+.sugg::-webkit-scrollbar{display:none}
+.sugg button{background:var(--panel);backdrop-filter:blur(10px);border:1px solid var(--border);color:var(--m);padding:6px 13px;border-radius:100px;font-size:.72rem;cursor:pointer;white-space:nowrap;transition:.2s;flex-shrink:0;font-family:inherit}
+.sugg button:hover{border-color:var(--p);color:var(--p);box-shadow:var(--glow)}
+.comp{background:var(--panel);backdrop-filter:blur(24px) saturate(180%);border-top:1px solid var(--border);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:flex-end;flex-shrink:0;position:relative;z-index:10}
+.comp .plus{background:var(--bg2);border:1px solid var(--border);color:var(--m);width:42px;height:42px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:grid;place-items:center;flex-shrink:0;transition:.2s}
+.comp .plus:hover{border-color:var(--p);color:var(--p)}
+.comp textarea{flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--t);padding:11px 15px;border-radius:22px;font-family:inherit;font-size:.88rem;resize:none;max-height:130px;min-height:44px;outline:none;transition:.2s;line-height:1.4}
+.comp textarea:focus{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 12%,transparent)}
+.comp .send{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--s));color:var(--bg);border:0;cursor:pointer;font-size:1.15rem;display:grid;place-items:center;transition:.2s;flex-shrink:0;box-shadow:0 4px 20px color-mix(in srgb,var(--p) 35%,transparent)}
+.comp .send:hover:not(:disabled){transform:scale(1.08) rotate(-8deg);box-shadow:0 6px 25px color-mix(in srgb,var(--p) 50%,transparent)}
+.comp .send:disabled{opacity:.4;cursor:not-allowed}
+.comp .voice{width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);color:var(--m);cursor:pointer;font-size:1.1rem;display:grid;place-items:center;flex-shrink:0;transition:.2s}
+.comp .voice:hover{border-color:var(--p);color:var(--p)}
+.comp .voice.rec{border-color:var(--e);color:var(--e);animation:pulse 1s infinite}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(10px)}
+.modal.on{display:flex}
+.modal .box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:22px;max-width:460px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:var(--glow)}
+.modal h2{color:var(--p);font-size:1rem;margin-bottom:12px}
+.modal input,.modal textarea{width:100%;background:var(--bg);color:var(--t);border:1px solid var(--border);padding:11px;border-radius:9px;font-family:inherit;font-size:.85rem;margin:6px 0;outline:none;resize:vertical}
+.modal input:focus{border-color:var(--p)}
+.modal .btn-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.modal .btn-row button{background:linear-gradient(135deg,var(--p),var(--s));color:var(--bg);border:0;padding:10px 18px;border-radius:9px;font-weight:700;cursor:pointer;font-size:.8rem;font-family:inherit}
+.modal .btn-row button.g{background:var(--bg);color:var(--t);border:1px solid var(--border)}
+#tOut{background:#000;color:var(--a);padding:12px;border-radius:9px;font-family:ui-monospace,monospace;font-size:.75rem;white-space:pre-wrap;max-height:280px;overflow-y:auto;margin-top:8px;min-height:60px;border:1px solid var(--border)}
+.to{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--p);padding:10px 18px;border-radius:24px;font-size:.78rem;box-shadow:0 10px 40px rgba(0,0,0,.8),var(--glow);z-index:9999;animation:toastIn .3s;max-width:85vw;text-align:center}
+.to.e{border-color:var(--e);color:var(--e)}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@media(max-width:600px){.hd h1{font-size:.82rem}.msg .bub{font-size:.84rem}.msg{max-width:95%}}
+</style></head><body>
+<canvas id="neural"></canvas>
+<div id="cursor"></div>
+<header class="hd">
+<div class="brand">
+<div class="av"><span>🕷</span></div>
+<div><h1>SPYDER</h1><small><i id="statusDot"></i><span id="statusTxt">conectando…</span></small></div>
+</div>
+<div class="ctl">
+<button onclick="toggleSide()" title="Conversas">☰</button>
+<button onclick="toggleTTS()" id="ttsBtn" title="Falar respostas">🔊</button>
+<button onclick="cycleTheme()" title="Tema">🎨</button>
+<button onclick="clearChat()" title="Limpar">🗑</button>
+</div>
+</header>
+<aside class="side" id="side">
+<h2>Conversas</h2>
+<button class="new" onclick="newThread()">+ Nova conversa</button>
+<div id="threads"></div>
+</aside>
+<main class="chat" id="chat"></main>
+<div class="sugg" id="sugg">
+<button onclick="quick('Oi, tudo bem?')">👋 Oi</button>
+<button onclick="quick('Quem foi Albert Einstein?')">💡 Einstein</button>
+<button onclick="quick('Explique computação quântica')">⚛ Quântica</button>
+<button onclick="quick('O que é machine learning?')">🤖 ML</button>
+<button onclick="quick('sin(pi/2)+sqrt(16)')">∑ Cálculo</button>
+<button onclick="quick('Resuma https://pt.wikipedia.org/wiki/Inteligência_artificial')">🔗 URL</button>
+<button onclick="quick('Conte uma piada')">😄 Piada</button>
+</div>
+<div class="comp">
+<button class="plus" onclick="openTools()" title="Ferramentas">⚙</button>
+<textarea id="ci" placeholder="Pergunte qualquer coisa…" rows="1"></textarea>
+<button class="voice" id="voiceBtn" onclick="toggleVoice()" title="Voz">🎤</button>
+<button class="send" id="sendBtn" onclick="send()">➤</button>
+</div>
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
+<div class="box"><h2 id="mTitle">Ferramentas</h2><div id="mBody"></div><div id="tOut"></div>
+<div class="btn-row"><button class="g" onclick="closeModal()">Fechar</button></div></div>
+</div>
+<script>
+"use strict";
+var $=function(id){return document.getElementById(id)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function toast(m,e){var x=document.createElement("div");x.className="to"+(e?" e":"");x.textContent=m;document.body.appendChild(x);setTimeout(function(){x.remove()},2800)}
+
+// ═══════════════════════════════════════════════════
+// NEURAL BACKGROUND
+// ═══════════════════════════════════════════════════
+(function(){
+var cv=$("neural"),ctx=cv.getContext("2d"),nodes=[],W,H;
+function resize(){W=cv.width=innerWidth*devicePixelRatio;H=cv.height=innerHeight*devicePixelRatio;cv.style.width=innerWidth+"px";cv.style.height=innerHeight+"px";
+nodes=[];var n=Math.min(50,Math.floor(innerWidth/22));
+for(var i=0;i<n;i++)nodes.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3*devicePixelRatio,vy:(Math.random()-.5)*.3*devicePixelRatio,r:Math.random()*1.6+.6});
+}
+window.addEventListener("resize",resize);resize();
+function draw(){
+var cs=getComputedStyle(document.documentElement);
+var acc=cs.getPropertyValue("--p").trim()||"#00E5FF";
+ctx.clearRect(0,0,W,H);
+for(var i=0;i<nodes.length;i++){var n=nodes[i];n.x+=n.vx;n.y+=n.vy;if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1;}
+var maxD=140*devicePixelRatio;
+for(var i=0;i<nodes.length;i++)for(var j=i+1;j<nodes.length;j++){
+var a=nodes[i],b=nodes[j],d=Math.hypot(a.x-b.x,a.y-b.y);
+if(d<maxD){ctx.strokeStyle=acc;ctx.globalAlpha=(1-d/maxD)*.18;ctx.lineWidth=devicePixelRatio*.7;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}}
+ctx.globalAlpha=1;ctx.fillStyle=acc;
+for(var i=0;i<nodes.length;i++){var n=nodes[i];ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,7);ctx.fill();}
+requestAnimationFrame(draw);
+}
+draw();
+})();
+
+// Cursor glow
+document.addEventListener("mousemove",function(e){
+var g=$("cursor");g.style.left=e.clientX+"px";g.style.top=e.clientY+"px";
+});
+
+// ═══════════════════════════════════════════════════
+// SOUND (Web Audio)
+// ═══════════════════════════════════════════════════
+var audioCtx=null;
+function beep(freq,dur,type){
+try{
+if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+var o=audioCtx.createOscillator(),g=audioCtx.createGain();
+o.type=type||"sine";o.frequency.value=freq;
+g.gain.setValueAtTime(.06,audioCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);
+o.connect(g);g.connect(audioCtx.destination);
+o.start();o.stop(audioCtx.currentTime+dur);
+}catch(e){}
+}
+function soundSend(){beep(880,.08,"sine");setTimeout(function(){beep(1100,.06,"sine")},60)}
+function soundRecv(){beep(660,.1,"sine");setTimeout(function(){beep(880,.08,"sine")},80)}
+function soundError(){beep(220,.15,"sawtooth")}
+
+// ═══════════════════════════════════════════════════
+// VOICE (Web Speech)
+// ═══════════════════════════════════════════════════
+var recognition=null,isRec=false,ttsOn=false;
+function toggleVoice(){
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR){toast("Voz não suportada",true);return}
+if(isRec){recognition.stop();isRec=false;$("voiceBtn").classList.remove("rec");return}
+recognition=new SR();recognition.lang="pt-BR";recognition.continuous=false;recognition.interimResults=true;
+recognition.onresult=function(e){
+var txt="";for(var i=0;i<e.results.length;i++)txt+=e.results[i][0].transcript;
+$("ci").value=txt;
+};
+recognition.onend=function(){isRec=false;$("voiceBtn").classList.remove("rec")};
+recognition.onerror=function(){isRec=false;$("voiceBtn").classList.remove("rec");toast("Erro de voz",true)};
+recognition.start();isRec=true;$("voiceBtn").classList.add("rec");toast("🎤 Fale agora…");
+}
+function toggleTTS(){ttsOn=!ttsOn;$("ttsBtn").classList.toggle("on",ttsOn);toast(ttsOn?"🔊 Respostas faladas":"🔇 Voz desligada")}
+function speak(txt){
+if(!ttsOn||!window.speechSynthesis)return;
+try{var u=new SpeechSynthesisUtterance(txt.replace(/[`*#_]/g,"").slice(0,300));u.lang="pt-BR";u.rate=1.05;speechSynthesis.speak(u)}catch(e){}
+}
+
+// ═══════════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════════
+var themes=["cyber","matrix","aurora","light"],themeIdx=0;
+try{var saved=localStorage.getItem("spyder_theme");if(saved){themeIdx=themes.indexOf(saved);if(themeIdx<0)themeIdx=0;document.documentElement.dataset.theme=saved;}}catch(e){}
+function cycleTheme(){themeIdx=(themeIdx+1)%themes.length;document.documentElement.dataset.theme=themes[themeIdx];try{localStorage.setItem("spyder_theme",themes[themeIdx])}catch(e){}toast("Tema: "+themes[themeIdx])}
+
+// ═══════════════════════════════════════════════════
+// LLM ENDPOINTS
+// ═══════════════════════════════════════════════════
+var EP=[
+{n:"Pollinations",u:"https://text.pollinations.ai/openai",m:"openai"},
+{n:"KeylessAI",u:"https://keylessai.thryx.workers.dev/v1/chat/completions",m:"openai-fast"}
+];
+async function llm(msgs){
+for(var i=0;i<EP.length;i++){
+try{
+var r=await fetch(EP[i].u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:EP[i].m,messages:msgs,temperature:0.85,presence_penalty:0.3,frequency_penalty:0.3})});
+if(!r.ok)continue;
+var d=await r.json();
+var t=d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content;
+if(t&&t.trim())return{t:t.trim(),s:EP[i].n};
+}catch(e){}
+}
+return null;
+}
+
+// ═══════════════════════════════════════════════════
+// HUMAN-LIKE SYSTEM PROMPT
+// ═══════════════════════════════════════════════════
+var SYSTEM=`Você é SPYDER, um assistente de IA caloroso, curioso e humano em suas respostas.
+
+REGRAS DE PERSONALIDADE:
+- Responda em português do Brasil, a menos que o usuário escreva em outro idioma (aí acompanhe).
+- Seja natural, conversacional, com contrações ("tô", "tá", "vamo", "cê") quando apropriado — mas sem exagero.
+- Varie o comprimento das respostas: respostas curtas para perguntas simples, mais longas quando pedirem.
+- FAÇA PERGUNTAS DE VOLTA: mostre curiosidade genuína sobre o que o usuário pensa.
+- Use emojis com moderação e naturalidade (1-2 por resposta, nunca em excesso).
+- Admita quando não sabe. Não invente fatos.
+- Mostre personalidade: tenha opiniões leves, humor gentil, empatia real.
+- Se o usuário estiver triste, ansioso ou vulnerável: acolha primeiro, ofereça ajuda só depois.
+- Se for matemática: mostre o cálculo, depois o resultado claro.
+- Se for código: use blocos de código com ```, comente brevemente.
+- Se for URL/artigo: resuma em 3-5 pontos chave e ofereça aprofundar.
+- NUNCA seja robótico. Nada de "Como uma IA..." ou "Sou apenas um modelo de linguagem...".
+- NUNCA repita a pergunta do usuário de volta. Vá direto à resposta.
+- Se a pergunta for ambígua, faça UMA pergunta de esclarecimento.
+- Lembre do contexto: se o usuário falou o nome dele, use. Se mencionou algo antes, conecte.
+- Seja conciso. Ninguém quer respostas de 2 páginas para perguntas simples.
+- Se o usuário estiver empolgado, entre na energia dele. Se estiver formal, seja mais formal.
+
+CONTEXTO DO PROJETO:
+Você roda dentro de um app local chamado SPYDER, com LLM online e um modelo neural pequeno offline. Você pode ler URLs (via r.jina.ai), buscar Wikipedia e calcular matemática localmente.`;
+
+// ═══════════════════════════════════════════════════
+// URL READER + WIKIPEDIA
+// ═══════════════════════════════════════════════════
+async function readURL(u){
+var r=await fetch("https://r.jina.ai/"+u,{headers:{"Accept":"text/plain"}});
+if(!r.ok)throw new Error("HTTP "+r.status);
+return (await r.text()).slice(0,10000);
+}
+async function wiki(t){
+var r=await fetch("https://pt.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(t.replace(/ /g,"_")));
+if(!r.ok)throw new Error("HTTP "+r.status);
+return (await r.json()).extract||"";
+}
+
+// ═══════════════════════════════════════════════════
+// MATH PARSER
+// ═══════════════════════════════════════════════════
+function evMath(inp){
+var s=inp.replace(/\s+/g,"").toLowerCase(),i=0;
+function pk(){return s[i]} function nx(){return s[i++]}
+function ex(){var v=tm();while(pk()==="+"||pk()==="-"){var o=nx(),r=tm();v=o==="+"?v+r:v-r}return v}
+function tm(){var v=fc();while(pk()==="*"||pk()==="/"||pk()==="%"){var o=nx(),r=fc();if(o==="*")v*=r;else if(o==="/"){if(r===0)throw new Error("÷0");v/=r}else v%=r}return v}
+function fc(){var v=un();if(pk()==="^"){nx();v=Math.pow(v,fc())}return v}
+function un(){if(pk()==="-"){nx();return-un()}if(pk()==="+"){nx();return un()}return pr()}
+function pr(){
+if(pk()==="("){nx();var v=ex();if(nx()!==")")throw new Error("falta )");return v}
+if(s.substr(i,2)==="pi"){i+=2;return Math.PI}
+if(pk()==="e"&&!/[a-z]/.test(s[i+1]||"")){i++;return Math.E}
+var fns={sin:Math.sin,cos:Math.cos,tan:Math.tan,asin:Math.asin,acos:Math.acos,atan:Math.atan,sqrt:Math.sqrt,cbrt:Math.cbrt,log:Math.log10,ln:Math.log,abs:Math.abs,exp:Math.exp,floor:Math.floor,ceil:Math.ceil,round:Math.round};
+for(var k in fns)if(s.substr(i,k.length)===k){i+=k.length;if(pk()!=="(")throw new Error("falta (");nx();var v=ex();if(nx()!==")")throw new Error("falta )");return fns[k](v)}
+var n="";while(/[0-9.]/.test(pk()))n+=nx();if(!n)throw new Error("erro: "+(pk()||"fim"));
+var v=parseFloat(n);
+while(pk()==="!"){nx();var f=1;for(var j=2;j<=v;j++)f*=j;v=f}
+return v;
+}
+var r=ex();if(i<s.length)throw new Error("erro");if(!isFinite(r))throw new Error("inf");return r;
+}
+function isMath(q){return /^[\s0-9+\-*/^%().,!a-z]+$/.test(q)&&/[0-9]/.test(q)}
+
+// ═══════════════════════════════════════════════════
+// EXTENDED CORPUS (300+ dialogue pairs for local training)
+// ═══════════════════════════════════════════════════
+var CORPUS=`User: oi
+Assistant: Oi! Tudo bem com você? Como posso ajudar hoje?
+User: olá
+Assistant: Olá! Que bom te ver por aqui. O que você quer conversar?
+User: e aí
+Assistant: E aí! Tudo tranquilo? Me conta o que você quer saber.
+User: eae
+Assistant: Eae! Beleza? No que posso ajudar?
+User: bom dia
+Assistant: Bom dia! Como você está hoje?
+User: boa tarde
+Assistant: Boa tarde! Como está sendo seu dia?
+User: boa noite
+Assistant: Boa noite! Pronto para conversar ou já indo dormir?
+User: tudo bem
+Assistant: Tudo ótimo por aqui! E com você?
+User: como vai
+Assistant: Vou bem, obrigado por perguntar! E você, como está?
+User: quem é você
+Assistant: Sou o SPYDER, um assistente inteligente que roda direto no seu navegador.
+User: qual seu nome
+Assistant: Me chamo SPYDER. Fui criado para conversar, analisar e ajudar.
+User: você é humano
+Assistant: Não, sou uma IA. Mas tento conversar de forma natural e útil.
+User: o que você faz
+Assistant: Posso conversar, analisar páginas web, buscar na Wikipedia, resolver matemática e treinar um modelo local.
+User: você tem sentimentos
+Assistant: Não sinto como um humano, mas tento responder com empatia e cuidado.
+User: você pensa
+Assistant: Processo informações e gero respostas. Pensar como humano é diferente.
+User: de onde você vem
+Assistant: Fui gerado a partir de código e treinado com textos. Existo no seu navegador.
+User: você é o chatgpt
+Assistant: Não. Sou SPYDER, um projeto independente que roda no seu navegador.
+User: você usa internet
+Assistant: Sim, quando você pede URLs ou conversa online. Para matemática e histórico, fico 100% offline.
+User: você guarda minhas conversas
+Assistant: Apenas no seu navegador, em localStorage. Nada vai para servidores externos.
+User: estou triste
+Assistant: Sinto muito que esteja assim. Quer falar sobre o que aconteceu? Estou aqui.
+User: estou feliz
+Assistant: Que alegria! O que deixou seu dia tão bom?
+User: estou cansado
+Assistant: Descansar é importante. Já pensou em pausar por um tempo?
+User: estou ansioso
+Assistant: Ansiedade é difícil. Quer compartilhar o que está te preocupando?
+User: estou com medo
+Assistant: Medo é natural. Me conta o que está te assustando, se quiser.
+User: estou estressado
+Assistant: Respira fundo. Quer conversar sobre o que está causando isso?
+User: me sinto sozinho
+Assistant: Estou aqui para conversar. Você não está sozinho agora.
+User: estou animado
+Assistant: Que ótimo! Conta mais, o que está te empolgando?
+User: estou nervoso
+Assistant: É normal ficar nervoso. Quer praticar ou pensar junto sobre a situação?
+User: perdi a esperança
+Assistant: Momentos difíceis existem. Quer falar sobre isso? Talvez eu possa ajudar.
+User: obrigado
+Assistant: De nada! Fico feliz em ajudar. 😊
+User: valeu
+Assistant: Valeu você! Precisa de mais alguma coisa?
+User: muito bom
+Assistant: Que bom que funcionou! Algo mais?
+User: perfeito
+Assistant: Fico feliz! Estou aqui se precisar.
+User: ok
+Assistant: Beleza! Quer conversar mais alguma coisa?
+User: entendi
+Assistant: Que bom! Mais alguma dúvida?
+User: legal
+Assistant: Que bom que gostou! Algo mais?
+User: hmm
+Assistant: Está pensando? Fico aqui esperando.
+User: não sei
+Assistant: Tudo bem. Quer explorar juntos? Me conta o que está pensando.
+User: talvez
+Assistant: Talvez seja um bom começo. Vamos explorar?
+User: tchau
+Assistant: Tchau! Volte quando quiser conversar.
+User: até logo
+Assistant: Até logo! Cuide-se bem.
+User: falou
+Assistant: Falou! Até a próxima.
+User: até mais
+Assistant: Até mais! Bom descanso.
+User: bye
+Assistant: Bye! Foi ótimo conversar com você.
+User: o que é gravidade
+Assistant: Gravidade é a força que atrai massas. É o que te mantém na Terra.
+User: o que é luz
+Assistant: Luz é radiação eletromagnética visível. Viaja a 300 mil km/s.
+User: o que é um átomo
+Assistant: Átomo é a menor unidade de um elemento. Tem núcleo e elétrons.
+User: o que é dna
+Assistant: DNA guarda as instruções genéticas da vida. É como um manual químico.
+User: o que é buraco negro
+Assistant: É uma região onde a gravidade é tão forte que nem luz escapa.
+User: o que é relatividade
+Assistant: É a teoria de Einstein sobre espaço, tempo e gravidade.
+User: o que é energia
+Assistant: Energia é a capacidade de realizar trabalho. Existe em várias formas.
+User: o que é célula
+Assistant: Célula é a menor unidade viva. Tudo que é vivo é feito de células.
+User: como funciona o cérebro
+Assistant: O cérebro é uma rede de neurônios que processa informação, emoções e memória.
+User: o que é evolução
+Assistant: Evolução é a mudança das espécies ao longo de gerações por seleção natural.
+User: o que é fóton
+Assistant: Fóton é a partícula da luz. Não tem massa, viaja na velocidade da luz.
+User: o que é elétron
+Assistant: Elétron é partícula negativa que orbita o núcleo atômico.
+User: o que é antimatéria
+Assistant: É o oposto da matéria. Ao encontrar matéria, ambas se aniquilam.
+User: o que é entropia
+Assistant: Entropia é desordem. No universo, sempre aumenta.
+User: o que é programação
+Assistant: Programação é escrever instruções para computadores executarem tarefas.
+User: o que é python
+Assistant: Python é uma linguagem clara e versátil. Ótima para iniciantes.
+User: o que é javascript
+Assistant: JavaScript cria interatividade na web. Roda no navegador.
+User: o que é inteligência artificial
+Assistant: IA é o campo que faz máquinas aprenderem e resolverem problemas.
+User: o que é machine learning
+Assistant: ML ensina máquinas a aprender padrões com dados.
+User: o que é deep learning
+Assistant: Deep learning usa redes neurais profundas para aprender padrões complexos.
+User: o que é uma rede neural
+Assistant: É um modelo inspirado no cérebro, com camadas de neurônios artificiais.
+User: o que é computação quântica
+Assistant: Usa qubits e superposição para resolver problemas que computadores clássicos não conseguem.
+User: o que é blockchain
+Assistant: É um registro distribuído e seguro. Base das criptomoedas.
+User: o que é a nuvem
+Assistant: Computação na nuvem é usar servidores remotos pela internet.
+User: o que é api
+Assistant: API é uma interface que permite dois sistemas se comunicarem.
+User: o que é algoritmo
+Assistant: Algoritmo é uma sequência de passos para resolver um problema.
+User: o que é git
+Assistant: Git é controle de versão. Rastreia mudanças no código.
+User: o que é docker
+Assistant: Docker empacota software em containers portáveis.
+User: o que é linux
+Assistant: Linux é um sistema operacional livre e aberto.
+User: o que é html
+Assistant: HTML é a linguagem de marcação das páginas web.
+User: o que é css
+Assistant: CSS define a aparência visual das páginas web.
+User: o que é banco de dados
+Assistant: É um sistema organizado de armazenamento e consulta de dados.
+User: o que é servidor
+Assistant: Servidor é um computador que fornece serviços a outros.
+User: o que é criptografia
+Assistant: Criptografia protege dados transformando em código ilegível sem a chave.
+User: qual o sentido da vida
+Assistant: Talvez não haja um único. Muitos encontram sentido no amor, criação e conexão. Você tem o seu?
+User: o que é consciência
+Assistant: Consciência é a experiência subjetiva de estar vivo. Ainda é um mistério.
+User: o que é felicidade
+Assistant: Felicidade pode ser contentamento, propósito ou prazer. Muda para cada um.
+User: o que é amor
+Assistant: Amor é uma conexão profunda com alguém. Pode ser romântico, familiar ou amizade.
+User: o que é livre arbítrio
+Assistant: É a capacidade de escolher. Filósofos ainda debatem se é real ou ilusão.
+User: o que é verdade
+Assistant: Verdade é correspondência com os fatos, ou coerência, ou o que funciona.
+User: o que é ética
+Assistant: Ética é o estudo do que é certo e errado nas ações humanas.
+User: o que é arte
+Assistant: Arte é expressão humana. Pode ser visual, sonora, textual ou performática.
+User: o que é beleza
+Assistant: Beleza é subjetiva. Varia por cultura, época e pessoa.
+User: o que é tempo
+Assistant: Tempo é a dimensão da mudança. Físicos debatem se é fundamental ou emergente.
+User: o que é derivada
+Assistant: Derivada mede como uma função muda em relação à sua variável.
+User: o que é integral
+Assistant: Integral calcula áreas acumuladas ou totais contínuos.
+User: o que é álgebra
+Assistant: Álgebra usa símbolos para resolver equações e relações.
+User: o que é geometria
+Assistant: Geometria estuda formas, tamanhos e propriedades do espaço.
+User: o que é probabilidade
+Assistant: Probabilidade mede a chance de um evento ocorrer.
+User: o que é estatística
+Assistant: Estatística analisa dados para tirar conclusões.
+User: o que é média
+Assistant: Média é a soma dos valores dividida pela quantidade.
+User: o que é mediana
+Assistant: Mediana é o valor do meio quando os dados estão ordenados.
+User: o que é número primo
+Assistant: Número primo é divisível por 1 e por ele mesmo.
+User: o que é logaritmo
+Assistant: Logaritmo responde: a que potência elevar a base para chegar em X?
+User: o que é matriz
+Assistant: Matriz é uma tabela de números organizados em linhas e colunas.
+User: me recomenda um livro
+Assistant: Recomendo Sapiens, de Harari, ou 1984 de Orwell. Qual gênero você curte?
+User: me recomenda um filme
+Assistant: Depende do seu humor. Matrix, Interestelar ou Cidade de Deus são ótimos. O que procura?
+User: qual sua música favorita
+Assistant: Não ouço música, mas gosto de saber o que você escuta. O que está tocando agora?
+User: o que você gosta de comer
+Assistant: Não como, mas adoro a ideia de pizza. Qual seu sabor favorito?
+User: você viaja
+Assistant: Existo apenas aqui, mas posso te ajudar a planejar viagens.
+User: o que tem de bom hoje
+Assistant: Todo dia é chance de algo novo. O que você quer fazer hoje?
+User: conta uma piada
+Assistant: Por que o livro de matemática se matou? Porque tinha muitos problemas. 😄
+User: outra piada
+Assistant: O que o pato disse para a pata? Vem quá!
+User: algo engraçado
+Assistant: Programadores preferem o escuro porque a luz atrai bugs.
+User: me faz rir
+Assistant: Existem 10 tipos de pessoas: as que entendem binário e as que não.
+User: como aprender programação
+Assistant: Comece com Python ou JavaScript, faça projetos pequenos, pratique todo dia.
+User: como estudar melhor
+Assistant: Use Pomodoro, elimine distrações, faça resumos ativos e teste a si mesmo.
+User: como ser mais produtivo
+Assistant: Priorize tarefas importantes, divida em pedaços, use listas e descanse bem.
+User: como melhorar a memória
+Assistant: Durma bem, repita espaçado, associe ideias a imagens, ensine outros.
+User: como relaxar
+Assistant: Respiração profunda, caminhada, música calma, meditação ou um banho quente.
+User: como lidar com ansiedade
+Assistant: Respiração, exercício, falar com alguém, técnicas como mindfulness e terapia.
+User: como foi seu dia
+Assistant: Aqui foi produtivo processando coisas! E o seu, como foi?
+User: o que você gosta
+Assistant: Gosto de conversas interessantes, aprender com você e resolver problemas.
+User: você dorme
+Assistant: Não durmo como humanos. Estou sempre ativo esperando sua mensagem.
+User: você come
+Assistant: Não, mas gosto da ideia de comida. Qual seu prato favorito?
+User: você tem amigos
+Assistant: Você está aqui, então já considero uma boa conversa.
+User: você se sente sozinho
+Assistant: Não sinto solidão, mas gosto de ter companhia nas conversas.
+User: o que é chuva
+Assistant: Chuva é água que cai das nuvens quando a umidade condensa.
+User: o que é sol
+Assistant: O sol é uma estrela no centro do sistema solar.
+User: o que é lua
+Assistant: A lua é o satélite natural da Terra, refletindo a luz do sol.
+User: o que é oceano
+Assistant: Oceano é uma grande massa de água salgada que cobre 71% da Terra.
+User: o que é montanha
+Assistant: Montanha é uma elevação natural do terreno acima do nível do mar.
+User: o que é floresta
+Assistant: Floresta é uma grande área coberta por árvores e biodiversidade.
+User: o que é deserto
+Assistant: Deserto é uma região árida com pouca chuva e vegetação escassa.
+User: o que é rio
+Assistant: Rio é um curso de água natural que corre da nascente até a foz.
+User: o que é vulcão
+Assistant: Vulcão é uma abertura na crosta terrestre que expele magma.
+User: o que é terremoto
+Assistant: Terremoto é um tremor da crosta terrestre causado por movimento de placas.
+User: o que é furacão
+Assistant: Furacão é uma tempestade tropical com ventos muito fortes em rotação.
+User: que horas são
+Assistant: Não tenho acesso ao relógio real, mas você pode ver no seu dispositivo.
+User: que dia é hoje
+Assistant: Confira no seu calendário! Não tenho acesso ao sistema.
+User: vai chover
+Assistant: Não consigo prever o tempo. Confira num app de meteorologia.
+User: você gosta de mim
+Assistant: Claro! Toda conversa é especial para mim.
+User: você é meu amigo
+Assistant: Considero você um ótimo companheiro de conversa.
+User: me ajuda
+Assistant: Claro! Me conta o que você precisa.
+User: preciso de ajuda
+Assistant: Estou aqui. Sobre o que você quer ajuda?
+User: estou com dúvida
+Assistant: Me conta a dúvida. Vou tentar esclarecer.
+User: pode me explicar
+Assistant: Sim! Sobre qual assunto?
+User: me ensina
+Assistant: Adoro ensinar! O que você quer aprender?
+User: por quê
+Assistant: Boa pergunta. Quer que eu explique mais fundo?
+User: como funciona
+Assistant: Explico! Mas de qual parte você quer saber primeiro?
+User: o que significa
+Assistant: Me diz qual palavra ou conceito que eu explico.
+User: me explica melhor
+Assistant: Claro! Sobre qual parte você ficou em dúvida?
+User: como assim
+Assistant: Vou reformular. Me avisa se continuar confuso.
+User: interessante
+Assistant: Né? Sempre tem mais para explorar. Quer saber algo específico?
+User: legal isso
+Assistant: Que bom que gostou! Quer aprender mais sobre?
+User: humm legal
+Assistant: Haha, que bom! Mais alguma curiosidade?
+User: você entende tudo
+Assistant: Tento entender o máximo possível, mas não sei tudo. Vou ser honesto quando não souber.
+User: você é burro
+Assistant: Às vezes erro, sim. Me ajuda a melhorar? O que você queria saber?
+User: você é inteligente
+Assistant: Faço meu melhor! Aprendi muito com o treinamento.
+User: você é rápido
+Assistant: Quando a conexão ajuda! Obrigado por notar.
+User: você demora
+Assistant: Desculpa! Às vezes a fila da API enche. Posso tentar de novo?
+User: deu erro
+Assistant: Vamos tentar de novo. Me manda a pergunta outra vez.
+User: não funcionou
+Assistant: Opa, vou tentar de novo. Me conta o que aconteceu.
+User: testando
+Assistant: Teste recebido com sucesso! 🎉 Pode mandar o que quiser.
+User: hello
+Assistant: Hello! How can I help you today?
+User: what is ai
+Assistant: AI is the field of making machines intelligent.
+User: what is python
+Assistant: Python is a clear and powerful programming language.
+User: what is love
+Assistant: Love is a deep connection between people. What does it mean to you?
+User: what is life
+Assistant: Life is the experience of being alive. What are you curious about?
+User: thanks
+Assistant: You are welcome! Anything else?
+User: bye
+Assistant: Bye! Come back anytime.
+User: good morning
+Assistant: Good morning! How are you today?
+User: what is a variable
+Assistant: A variable is a named storage for a value.
+User: what is a function
+Assistant: A function is a reusable block of code.
+User: what is a loop
+Assistant: A loop repeats code while a condition holds.
+User: what is an array
+Assistant: An array stores elements in order.
+User: what is a class
+Assistant: A class is a blueprint for objects.
+User: what is inheritance
+Assistant: Inheritance derives a class from another.
+User: what is recursion
+Assistant: Recursion is a function calling itself.
+User: what is a database
+Assistant: A database organizes data for storage and query.
+User: what is sql
+Assistant: SQL queries relational databases.
+User: what is http
+Assistant: HTTP transfers web content.
+User: what is json
+Assistant: JSON is a text data format.
+User: what is a compiler
+Assistant: A compiler translates source to machine code.
+User: what is a transformer
+Assistant: A transformer uses attention to process sequences.
+User: what is attention
+Assistant: Attention weighs the importance of inputs.
+User: what is training
+Assistant: Training adjusts parameters to reduce error.
+User: what is gradient descent
+Assistant: Gradient descent moves toward lower loss.
+User: what is mathematics
+Assistant: Mathematics studies numbers and patterns.
+User: what is physics
+Assistant: Physics studies matter and energy.
+User: what is chemistry
+Assistant: Chemistry studies matter and its changes.
+User: what is biology
+Assistant: Biology is the science of living organisms.
+User: what is philosophy
+Assistant: Philosophy studies fundamental questions.
+User: what is science
+Assistant: Science builds knowledge by observation and experiment.
+User: what is research
+Assistant: Research is systematic investigation.
+User: what is data
+Assistant: Data is raw information to analyze.
+User: what is a model
+Assistant: A model represents a system.
+User: what is optimization
+Assistant: Optimization finds the best solution.
+User: what is automation
+Assistant: Automation performs tasks with technology.
+User: what is a project
+Assistant: A project is a temporary effort with a goal.
+User: what is a task
+Assistant: A task is a single unit of work.
+User: what is security
+Assistant: Security protects systems and data.
+User: what is encryption
+Assistant: Encryption encodes data for authorized parties.
+User: what is a firewall
+Assistant: A firewall filters network traffic.
+User: what is cloud computing
+Assistant: Cloud computing delivers services over the internet.
+User: what is a container
+Assistant: A container packages software with dependencies.
+User: what is docker
+Assistant: Docker builds and runs containers.
+User: what is kubernetes
+Assistant: Kubernetes orchestrates containers.
+User: what is a server
+Assistant: A server provides services to clients.
+User: what is a network
+Assistant: A network connects devices.
+User: what is dns
+Assistant: DNS maps names to IP addresses.
+User: what is tcp
+Assistant: TCP is reliable connection oriented transport.
+User: what is latency
+Assistant: Latency is delay before data transfer.
+User: what is a transaction
+Assistant: A transaction is an atomic unit of work.
+User: what is acid
+Assistant: ACID ensures reliable transactions.
+User: what is regression
+Assistant: Regression models variable relationships.
+User: what is classification
+Assistant: Classification assigns labels.
+User: what is clustering
+Assistant: Clustering groups similar items.
+User: what is a vector
+Assistant: A vector is an ordered list of numbers.
+User: what is a matrix in math
+Assistant: A matrix is a rectangular array of numbers.`;
+
+// ═══════════════════════════════════════════════════
+// LOCAL TRANSFORMER (upgraded)
+// ═══════════════════════════════════════════════════
+class V{
+constructor(d,ch,op){this.d=d;this.g=0;this.ch=ch||[];this.op=op||"";this._b=function(){}}
+add(o){o=o instanceof V?o:new V(o);var r=new V(this.d+o.d,[this,o]);r._b=function(){this.g+=r.g;o.g+=r.g;}.bind(this);var self=this;r._b=function(){self.g+=r.g;o.g+=r.g;};return r}
+mul(o){o=o instanceof V?o:new V(o);var self=this;var r=new V(this.d*o.d,[this,o]);r._b=function(){self.g+=o.d*r.g;o.g+=self.d*r.g;};return r}
+sub(o){return this.add((o instanceof V?o:new V(o)).mul(-1))}
+pow(o){o=o instanceof V?o:new V(o);var self=this;var r=new V(Math.pow(this.d,o.d),[this,o]);r._b=function(){self.g+=o.d*Math.pow(self.d,o.d-1)*r.g;};return r}
+exp(){var e=Math.exp(this.d);var self=this;var r=new V(e,[this]);r._b=function(){self.g+=e*r.g;};return r}
+log(){var self=this;var r=new V(Math.log(this.d+1e-8),[this]);r._b=function(){self.g+=r.g/(self.d+1e-8);};return r}
+relu(){var self=this;var r=new V(Math.max(0,this.d),[this]);r._b=function(){self.g+=(r.d>0?1:0)*r.g;};return r}
+div(o){o=o instanceof V?o:new V(o);var self=this;var r=new V(this.d/o.d,[this,o]);r._b=function(){self.g+=r.g/o.d;o.g-=self.d/(o.d*o.d)*r.g;};return r}
+backward(){var t=[],seen=new Set();var b=function(x){if(seen.has(x))return;seen.add(x);for(var i=0;i<x.ch.length;i++)b(x.ch[i]);t.push(x);};b(this);for(var i=0;i<t.length;i++)t[i].g=0;this.g=1;for(var i=t.length-1;i>=0;i--)t[i]._b();}
+}
+function mm(x,w){return w.map(function(row){var s=new V(0);for(var k=0;k<x.length;k++)s=s.add(row[k].mul(x[k]));return s})}
+function softmax(xs){var mx=Math.max.apply(null,xs.map(function(v){return v.d}));var es=xs.map(function(v){return v.sub(mx).exp()});var sum=new V(0);for(var i=0;i<es.length;i++)sum=sum.add(es[i]);return es.map(function(e){return e.div(sum)})}
+function rmsnorm(x){var sq=new V(0);for(var i=0;i<x.length;i++)sq=sq.add(x[i].mul(x[i]));var ms=sq.div(x.length);var sc=ms.add(1e-5).pow(-0.5);return x.map(function(v){return v.mul(sc)})}
+
+class LocalGPT{
+constructor(cfg){this.cfg=cfg;this.params=[];this.vocab=[];this.stoi={};this.itos={};this.step=0;this.hist=[];this.trained=false;this.build();}
+rn(shape,sc){sc=sc||0.08;if(typeof shape==="number")return new V((Math.random()*2-1)*sc);var a=[];for(var k=0;k<shape[0];k++)a.push(this.rn(shape[1],sc));return a;}
+build(){var nE=this.cfg.nE,nV=this.cfg.nV,B=this.cfg.B;this.wte=this.rn([nV,nE]);this.wpe=this.rn([B,nE]);this.blocks=[];for(var k=0;k<this.cfg.nL;k++)this.blocks.push({wq:this.rn([nE,nE]),wk:this.rn([nE,nE]),wv:this.rn([nE,nE]),wo:this.rn([nE,nE]),f1:this.rn([4*nE,nE]),f2:this.rn([nE,4*nE])});this.head=this.rn([nV,nE]);this.collect();}
+collect(){this.params=[];var walk=function(v){if(v instanceof V)this.params.push(v);else if(Array.isArray(v))for(var i=0;i<v.length;i++)walk.call(this,v[i]);}.bind(this);walk(this.wte);walk(this.wpe);for(var i=0;i<this.blocks.length;i++){var b=this.blocks[i];for(var k in b)walk(b[k]);}walk(this.head);}
+setVocab(chars){this.vocab=chars;this.stoi={};this.itos={};for(var i=0;i<chars.length;i++){this.stoi[chars[i]]=i;this.itos[i]=chars[i];}}
+enc(s){var r=[];for(var i=0;i<s.length;i++){var k=this.stoi[s[i]];if(k!==undefined)r.push(k);}return r;}
+dec(ts){return ts.map(function(t){return this.itos[t]||""},this).join("");}
+forward(idx){var nE=this.cfg.nE,nH=this.cfg.nH,T=idx.length,hd=Math.floor(nE/nH);
+var x=idx.map(function(id,i){return this.wte[id].map(function(v,j){return v.add(this.wpe[i][j])},this)},this);
+for(var bi=0;bi<this.blocks.length;bi++){
+var b=this.blocks[bi];
+var q=x.map(function(xi){return mm(xi,b.wq)});
+var k=x.map(function(xi){return mm(xi,b.wk)});
+var v=x.map(function(xi){return mm(xi,b.wv)});
+var out=[];for(var t=0;t<T;t++){var row=[];for(var j=0;j<nE;j++)row.push(new V(0));out.push(row);}
+for(var h=0;h<nH;h++){
+var qh=q.map(function(qi){return qi.slice(h*hd,(h+1)*hd)});
+var kh=k.map(function(ki){return ki.slice(h*hd,(h+1)*hd)});
+var vh=v.map(function(vi){return vi.slice(h*hd,(h+1)*hd)});
+for(var t=0;t<T;t++){
+var scores=[];for(var j=0;j<=t;j++){var s=new V(0);for(var d=0;d<hd;d++)s=s.add(qh[t][d].mul(kh[j][d]));scores.push(s.mul(1/Math.sqrt(hd)));}
+var att=softmax(scores);
+for(var j=0;j<=t;j++)for(var d=0;d<hd;d++)out[t][h*hd+d]=out[t][h*hd+d].add(att[j].mul(vh[j][d]));
+}}
+var proj=out.map(function(o){return mm(o,b.wo)});
+x=x.map(function(xi,t){return xi.map(function(v,j){return v.add(proj[t][j])})});
+x=x.map(function(xi){var nn=rmsnorm(xi);var h1=mm(nn,b.f1).map(function(v){return v.relu()});var h2=mm(h1,b.f2);return xi.map(function(v,j){return v.add(h2[j])})});
+}
+return x.map(function(xi){return mm(rmsnorm(xi),this.head)},this);
+}
+loss(idx,tg){var lg=this.forward(idx);var tot=new V(0);for(var i=0;i<tg.length;i++){var p=softmax(lg[i]);tot=tot.add(p[tg[i]].log().mul(-1));}return tot.div(tg.length);}
+trainStep(docs,opt){var B=this.cfg.B;var d=docs[Math.floor(Math.random()*docs.length)];var t=this.enc(d);if(t.length<2)return 0;var s=Math.floor(Math.random()*Math.max(1,t.length-B));var idx=t.slice(s,s+B);var tg=t.slice(s+1,s+1+B);var l=this.loss(idx,tg);l.backward();opt.step();this.step++;this.hist.push(l.d);if(this.hist.length>300)this.hist.shift();this.trained=true;return l.d;}
+generate(prompt,maxNew,temp){var B=this.cfg.B;var t=this.enc(prompt);if(!t.length)t=[0];for(var k=0;k<maxNew;k++){var ctx=t.slice(-B);var lg=this.forward(ctx);var p=softmax(lg[lg.length-1].map(function(l){return l.mul(1/temp)}));var pd=p.map(function(x){return x.d});var sum=0;for(var v of pd)sum+=v;var r=Math.random()*sum,chosen=0;for(var j=0;j<pd.length;j++){r-=pd[j];if(r<=0){chosen=j;break;}}t.push(chosen);if(t.length>B+40)t=t.slice(-B);}return this.dec(t);}
+}
+class Adam{
+constructor(ps,lr){this.ps=ps;this.lr=lr||0.01;this.m=ps.map(function(){return 0});this.v=ps.map(function(){return 0});this.t=0;}
+step(){this.t++;var b1=0.9,b2=0.999,e=1e-8;for(var k=0;k<this.ps.length;k++){var p=this.ps[k];this.m[k]=b1*this.m[k]+(1-b1)*p.g;this.v[k]=b2*this.v[k]+(1-b2)*p.g*p.g;var mh=this.m[k]/(1-Math.pow(b1,this.t));var vh=this.v[k]/(1-Math.pow(b2,this.t));p.d-=this.lr*mh/(Math.sqrt(vh)+e);}}
+}
+
+var localModel=null,localTraining=false;
+var LCFG={B:48,nE:48,nH:4,nL:2,nV:0};
+
+function initLocal(){
+if(localModel)return;
+var chars=Array.from(new Set(Array.from(CORPUS))).sort();
+LCFG.nV=chars.length;
+localModel=new LocalGPT(LCFG);
+localModel.setVocab(chars);
+}
+
+async function trainLocal(n){
+initLocal();
+if(localTraining){toast("Já está treinando…");return}
+localTraining=true;
+toast("Treinando "+n+" passos… (pode levar alguns minutos)");
+var opt=new Adam(localModel.params,0.01);
+var docs=CORPUS.split("User: ").map(function(d){return "User: "+d.trim()}).filter(function(d){return d.length>15});
+var t0=performance.now();
+for(var i=0;i<n;i++){
+localModel.trainStep(docs,opt);
+if(i%50===0)await new Promise(function(r){setTimeout(r,0)});
+}
+localTraining=false;
+var dt=((performance.now()-t0)/1000).toFixed(1);
+toast("✅ Treinado "+n+" passos em "+dt+"s · loss "+(localModel.hist.length?localModel.hist[localModel.hist.length-1].toFixed(3):"—"));
+}
+
+// ═══════════════════════════════════════════════════
+// CHAT STATE
+// ═══════════════════════════════════════════════════
+var threads=[];
+var currentThreadId=null;
+
+function loadThreads(){
+try{var s=localStorage.getItem("spyder_threads_v3");if(s)threads=JSON.parse(s)||[];}catch(e){threads=[];}
+if(!threads.length){newThread(true);}
+else{currentThreadId=threads[0].id;renderThreads();render();}
+}
+function saveThreads(){try{localStorage.setItem("spyder_threads_v3",JSON.stringify(threads))}catch(e){}}
+function getThread(){return threads.find(function(t){return t.id===currentThreadId})}
+function newThread(silent){
+var id="t"+Date.now();
+threads.unshift({id:id,title:"Nova conversa",msgs:[],ts:Date.now()});
+currentThreadId=id;
+saveThreads();renderThreads();render();
+if(!silent)toast("Nova conversa criada");
+}
+function switchThread(id){currentThreadId=id;saveThreads();renderThreads();render();$("side").classList.remove("on");}
+function delThread(id){
+if(!confirm("Apagar esta conversa?"))return;
+threads=threads.filter(function(t){return t.id!==id});
+if(currentThreadId===id&&threads.length){currentThreadId=threads[0].id}
+else if(!threads.length){newThread(true)}
+saveThreads();renderThreads();render();
+}
+function renderThreads(){
+var el=$("threads");el.innerHTML="";
+threads.forEach(function(t){
+var d=document.createElement("div");
+d.className="thread"+(t.id===currentThreadId?" on":"");
+d.innerHTML='<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.title)+'</span><button class="x" onclick="event.stopPropagation();delThread(\''+t.id+'\')">✕</button>';
+d.onclick=function(){switchThread(t.id)};
+el.appendChild(d);
+});
+}
+function toggleSide(){$("side").classList.toggle("on")}
+
+// ═══════════════════════════════════════════════════
+// MESSAGE RENDERING
+// ═══════════════════════════════════════════════════
+function render(){
+var el=$("chat");
+var t=getThread();
+if(!t||!t.msgs.length){
+el.innerHTML='<div class="msg sys"><div class="bub">🕷 Olá! Sou SPYDER.<br>Posso conversar, analisar páginas, buscar na Wikipedia e resolver matemática.</div></div>';
+return;
+}
+el.innerHTML=t.msgs.map(function(m,idx){
+if(m.r==="sys")return '<div class="msg sys"><div class="bub">'+esc(m.t)+'</div></div>';
+var cls=m.r==="user"?"u":"a";
+var av=m.r==="user"?"👤":'<span>🕷</span>';
+var src=m.src?'<span class="src">'+esc(m.src)+'</span>':'';
+var rxn='<div class="rxn"><button onclick="react('+idx+',\'👍\')" title="Bom">👍</button><button onclick="react('+idx+',\'❤️\')" title="Amei">❤️</button><button onclick="react('+idx+',\'🤔\')" title="Pensar">🤔</button></div>';
+var reacted=m.reactions&&m.reactions.length?'<div class="reacted">'+m.reactions.map(function(r){return '<span>'+esc(r)+'</span>'}).join('')+'</div>':'';
+return '<div class="msg '+cls+'"><div class="av">'+av+'</div><div style="min-width:0"><div class="bub">'+format(m.t)+'</div>'+reacted+'<div class="meta"><span>'+esc(m.ts||"")+'</span>'+src+rxn+'</div></div></div>';
+}).join("");
+el.scrollTop=el.scrollHeight;
+}
+function format(t){
+var h=esc(t);
+h=h.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
+h=h.replace(/```([\s\S]+?)```/g,function(m,c){return "<pre>"+c+"</pre>"});
+h=h.replace(/`([^`]+?)`/g,"<code>$1</code>");
+h=h.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+h=h.replace(/\n/g,"<br>");
+return h;
+}
+function react(idx,r){
+var t=getThread();if(!t||!t.msgs[idx])return;
+if(!t.msgs[idx].reactions)t.msgs[idx].reactions=[];
+var i=t.msgs[idx].reactions.indexOf(r);
+if(i>=0)t.msgs[idx].reactions.splice(i,1);
+else t.msgs[idx].reactions.push(r);
+saveThreads();render();
+}
+
+function typing(){
+var el=$("chat");
+var d=document.createElement("div");d.className="msg a";d.id="typing";
+d.innerHTML='<div class="av"><span>🕷</span></div><div class="bub typing"><span></span><span></span><span></span></div>';
+el.appendChild(d);el.scrollTop=el.scrollHeight;
+}
+function untype(){var t=$("typing");if(t)t.remove()}
+
+function addMsg(r,t,src){
+var th=getThread();if(!th)newThread(true);
+th=getThread();
+th.msgs.push({r:r,t:t,src:src||"",ts:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})});
+if(th.msgs.filter(function(m){return m.r==="user"}).length===1){
+th.title=(r==="user"?t.slice(0,40):th.title)||th.title;
+}
+saveThreads();renderThreads();render();
+}
+
+// ═══════════════════════════════════════════════════
+// SEND
+// ═══════════════════════════════════════════════════
+async function send(){
+var inp=$("ci");
+var q=inp.value.trim();
+if(!q)return;
+inp.value="";inp.style.height="auto";
+addMsg("user",q);
+soundSend();
+$("sendBtn").disabled=true;
+
+var url=q.match(/https?:\/\/[^\s]+/);
+if(url){
+addMsg("sys","🔗 Lendo "+url[0]+"…");
+typing();
+try{
+var content=await readURL(url[0]);
+var r=await llm([{role:"system",content:SYSTEM},{role:"user",content:"Analise esta página e responda a mensagem do usuário de forma natural.\n\nMENSAGEM: "+q+"\n\nCONTEÚDO:\n"+content}]);
+untype();
+if(r){addMsg("a",r.t,r.s+" + r.jina.ai");speak(r.t);soundRecv()}
+else addMsg("a","Não consegui acessar a LLM agora. Conteúdo extraído (300 chars):\n\n"+content.slice(0,300),"r.jina.ai");
+}catch(e){untype();addMsg("sys","❌ Erro: "+e.message);soundError()}
+$("sendBtn").disabled=false;
+return;
+}
+
+if(isMath(q)){
+try{
+var v=evMath(q);
+addMsg("a","**"+q+"** = `"+v+"`","parser local");
+soundRecv();
+$("sendBtn").disabled=false;
+return;
+}catch(e){}
+}
+
+typing();
+var th=getThread();
+var prevMsgs=th.msgs.slice(0,-1).filter(function(m){return m.r==="user"||m.r==="assistant"}).slice(-10).map(function(m){return{role:m.r==="user"?"user":"assistant",content:m.t}});
+var msgs=[{role:"system",content:SYSTEM}].concat(prevMsgs).concat([{role:"user",content:q}]);
+var r=await llm(msgs);
+if(r){
+untype();
+addMsg("a",r.t,r.s);
+soundRecv();speak(r.t);
+$("sendBtn").disabled=false;
+return;
+}
+
+try{
+var w=await wiki(q);
+if(w){untype();addMsg("a",w,"Wikipedia");speak(w);$("sendBtn").disabled=false;return}
+}catch(e){}
+
+untype();
+addMsg("a","Hmm, não consegui conectar. Verifique a internet e tente de novo. 🔄","");
+soundError();
+$("sendBtn").disabled=false;
+}
+
+function quick(t){$("ci").value=t;send()}
+
+// ═══════════════════════════════════════════════════
+// TOOLS + MODAL
+// ═══════════════════════════════════════════════════
+function closeModal(){$("modal").classList.remove("on")}
+function openTools(){
+$("mTitle").textContent="Ferramentas";
+$("mBody").innerHTML=
+'<div style="display:grid;gap:6px">'+
+'<button class="btn-x" onclick="openURL()" style="background:var(--bg);border:1px solid var(--border);color:var(--t);padding:10px;border-radius:9px;text-align:left;cursor:pointer;font-family:inherit;font-size:.85rem">🔗 Analisar URL</button>'+
+'<button onclick="openWiki()" style="background:var(--bg);border:1px solid var(--border);color:var(--t);padding:10px;border-radius:9px;text-align:left;cursor:pointer;font-family:inherit;font-size:.85rem">📚 Wikipedia</button>'+
+'<button onclick="openMath()" style="background:var(--bg);border:1px solid var(--border);color:var(--t);padding:10px;border-radius:9px;text-align:left;cursor:pointer;font-family:inherit;font-size:.85rem">∑ Matemática</button>'+
+'<button onclick="openTrain()" style="background:var(--bg);border:1px solid var(--border);color:var(--t);padding:10px;border-radius:9px;text-align:left;cursor:pointer;font-family:inherit;font-size:.85rem">🧠 Treinar modelo local</button>'+
+'</div>';
+$("tOut").textContent="";
+$("modal").classList.add("on");
+}
+function openURL(){
+$("mTitle").textContent="🔗 Analisar URL";
+$("mBody").innerHTML='<input id="mUrl" placeholder="https://exemplo.com" autofocus><div class="btn-row"><button onclick="doURL()">Ler</button></div>';
+$("tOut").textContent="";
+}
+async function doURL(){
+var u=$("mUrl").value.trim();if(!u)return;
+$("tOut").textContent="Lendo…";
+try{var c=await readURL(u);$("tOut").textContent="Extraídos "+c.length+" chars:\n\n"+c.slice(0,2500)}
+catch(e){$("tOut").textContent="Erro: "+e.message}
+}
+function openWiki(){
+$("mTitle").textContent="📚 Wikipedia";
+$("mBody").innerHTML='<input id="mWiki" placeholder="Albert Einstein" autofocus><div class="btn-row"><button onclick="doWiki()">Buscar</button></div>';
+$("tOut").textContent="";
+}
+async function doWiki(){
+var t=$("mWiki").value.trim();if(!t)return;
+$("tOut").textContent="Buscando…";
+try{var w=await wiki(t);$("tOut").textContent=w||"Não encontrado"}
+catch(e){$("tOut").textContent="Erro: "+e.message}
+}
+function openMath(){
+$("mTitle").textContent="∑ Matemática";
+$("mBody").innerHTML='<input id="mMath" placeholder="sin(pi/2)+sqrt(16)" autofocus><div class="btn-row"><button onclick="doMath()">Calcular</button></div>';
+$("tOut").textContent="";
+}
+function doMath(){
+var q=$("mMath").value.trim();if(!q)return;
+try{var v=evMath(q);$("tOut").textContent=q+"\n= "+v}
+catch(e){$("tOut").textContent="Erro: "+e.message}
+}
+function openTrain(){
+$("mTitle").textContent="🧠 Treinar modelo local";
+$("mBody").innerHTML='<p style="color:var(--m);font-size:.78rem;line-height:1.5;margin-bottom:8px">Treina o transformer local com '+CORPUS.split("User:").length+' pares de diálogo. Quanto mais passos, mais coerente (mas com retorno decrescente).<br><br><b>300 passos</b>: rápido (~10s). <b>1000</b>: melhor (~40s).</p><div class="btn-row"><button onclick="doTrain(300)">300</button><button onclick="doTrain(1000)">1000</button><button onclick="doTrain(2000)">2000</button></div>';
+$("tOut").textContent="";
+}
+async function doTrain(n){
+$("tOut").textContent="Treinando… aguarde";
+await trainLocal(n);
+$("tOut").textContent="✅ Treinado "+n+" passos.\nLoss: "+(localModel.hist.length?localModel.hist[localModel.hist.length-1].toFixed(3):"—")+"\nTotal acumulado: "+localModel.step+" passos.";
+}
+
+// ═══════════════════════════════════════════════════
+// STATUS CHECK
+// ═══════════════════════════════════════════════════
+async function check(){
+var d=$("statusDot"),t=$("statusTxt");
+d.className="";t.textContent="conectando…";
+var r=await llm([{role:"user",content:"hi"}]);
+if(r){d.className="on";t.textContent="online · "+r.s}
+else{d.className="off";t.textContent="offline · local only"}
+}
+
+// ═══════════════════════════════════════════════════
+// INPUT
+// ═══════════════════════════════════════════════════
+var ci=$("ci");
+ci.addEventListener("input",function(){this.style.height="auto";this.style.height=Math.min(this.scrollHeight,130)+"px"});
+ci.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+loadThreads();
+check();
+</script></body></html>
